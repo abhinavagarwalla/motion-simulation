@@ -134,10 +134,13 @@ double Optimization::f_cubicnCP(const gsl_vector *x, void *params_)
     // check if collides with wall. if so, make the score = 1.5 x time score
     using CollisionChecking::LineSegment;
     vector<LineSegment> ls;
-    ls.push_back(LineSegment(-HALF_FIELD_MAXX/fieldXConvert, -HALF_FIELD_MAXY/fieldXConvert, HALF_FIELD_MAXX/fieldXConvert, -HALF_FIELD_MAXY/fieldXConvert));
-    ls.push_back(LineSegment(-HALF_FIELD_MAXX/fieldXConvert, HALF_FIELD_MAXY/fieldXConvert, HALF_FIELD_MAXX/fieldXConvert, HALF_FIELD_MAXY/fieldXConvert));
-    ls.push_back(LineSegment(-HALF_FIELD_MAXX/fieldXConvert, -HALF_FIELD_MAXY/fieldXConvert, -HALF_FIELD_MAXX/fieldXConvert, +HALF_FIELD_MAXY/fieldXConvert));
-    ls.push_back(LineSegment(HALF_FIELD_MAXX/fieldXConvert, -HALF_FIELD_MAXY/fieldXConvert, HALF_FIELD_MAXX/fieldXConvert, +HALF_FIELD_MAXY/fieldXConvert));
+    double collix = HALF_FIELD_MAXX/fieldXConvert;
+    double botr = BOT_RADIUS/(fieldXConvert);
+    double colliy = HALF_FIELD_MAXY/fieldXConvert;
+    ls.push_back(LineSegment(-collix, -colliy+botr, collix, -colliy+botr));
+    ls.push_back(LineSegment(-collix, colliy-botr, collix, colliy-botr));
+    ls.push_back(LineSegment(-collix+botr, -colliy, -collix+botr, +colliy));
+    ls.push_back(LineSegment(collix-botr, -colliy, collix-botr, +colliy));
     bool collides_flag = false;
     for (int i = 0; i < ls.size(); i++) {
         vector<Pose> collisions = CollisionChecking::cubicSpline_LineSegmentIntersection(*p, ls[i]);
@@ -155,7 +158,7 @@ double Optimization::f_cubicnCP(const gsl_vector *x, void *params_)
     //vector<pair<double,float> > mp = p->lmaxk();
     //p->lmaxk();
     if (collides_flag)
-        time *= 3;
+        time *= 10;
     return time;
     //return maxk;
 }
@@ -250,6 +253,7 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
 //        double maxk_u, maxk;
 //        maxk = p->maxk(&maxk_u);
 //        qDebug() << "maxk = " << maxk << ", maxk_u = " << maxk_u;
+        qDebug() << "Spline Time : " << st->totalTime();
     }
     gsl_vector_free(x);
     gsl_vector_free(ss);

@@ -85,8 +85,9 @@ Trajectory *cubicnCP(Pose start, Pose end, double vls, double vrs, double vle, d
 //    pt2 = new PointDrawable(QPointF(cp2.x(), cp2.y()), gRenderArea);
 //    CubicSpline *p = new CubicSpline(start, end, midPoints);
 //    SplineTrajectory *st = new SplineTrajectory(p, vls, vrs, vle, vre);
-    Trajectory *st = Optimization::cubicSplinenCPOptimization(start, end, vls, vrs, vle, vre, n);
-    return st;
+
+    Trajectory *sto = Optimization::cubicSplinenCPOptimization(start, end, vls, vrs, vle, vre, n);
+    return sto;
 }
 
 SplineTrajectory *cubic_drawCollisions(Pose start, Pose end, double vls, double vrs, double vle, double vre, vector<Pose> midPoints = vector<Pose>()) {
