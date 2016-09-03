@@ -223,21 +223,6 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
     const double bndl[4] = {-1000,-1000,-1000,-1000};
     const double bndu[4] = {1000,1000,1000,1000};
     double minf=0;
-    double epsg = 0.0000000001;
-    double epsf = 0;
-    double epsx = 0;
-    ae_int_t maxits = 0;
-    minlmstate state;
-    minlmreport rep;
-
-//    minlmcreatev(2, x, 0.0001, state);
-//    minlmsetbc(state, bndl, bndu);
-//    minlmsetcond(state, epsg, epsf, epsx, maxits);
-//    alglib::minlmoptimize(state, f_cubicnCP);
-//    minlmresults(state, x, rep);
-
-//    qDebug("%d\n", float(rep.terminationtype)); // EXPECTED: 4
-//    qDebug("%s\n", x.tostring(4).c_str()); // EXPECTED: [-1,+1]
 
     bopt_params bparams = initialize_parameters_to_default();
     bparams.n_iterations = 150;

@@ -674,8 +674,8 @@ void Dialog::on_circleTrajButton_clicked()
 //    traj = quinticBezierSplineGenerator(start, end, 0, 0, 40, 70);aj = cubic2CP(start, end, 0, 0, 40, 70);
 
     //traj = cubic(start, end, 0, 0, 40, 70);
-        for(double sx=-800;sx<=-400;sx+=100){
-            for(double sy=-600;sy<=-400;sy+=100){
+        for(double sx=-700;sx<=-400;sx+=100){
+            for(double sy=-800;sy<=-400;sy+=100){
                 for(double ex=-400;ex<=400;ex+=100){
                     for(double ey=-400;ey<=400;ey+=100){
                             double st=0;double et=0;
