@@ -10,6 +10,8 @@ using namespace std;
 #include <alglib/optimization.h>
 #include "bayesopt/bayesopt/bayesopt.h"
 #include "bayesopt/bayesopt/parameters.h"
+#include "bayesopt/utils/displaygp.hpp"
+
 #include <iostream>
 using namespace alglib;
 
@@ -206,6 +208,7 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
     assert(n >= 0 && n <= 5);
     OptParams params(start, end, vls, vrs, vle, vre, n);
     gparams = &params;
+    qDebug() << "after params";
     /* Starting point */
     // set some values for the control points
     double cps[2*n] = {0};
@@ -221,18 +224,39 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
 //    QTextStream stream(&file);
 
 //    double x[4] = {};
-    const double bndl[2*n] = {-1000,-1000,-1000,-1000};
-    const double bndu[2*n] = {1000,1000,1000,1000};
+//    const double bndl[2*n] = {-1000,-1000,-1000,-1000};
+//    const double bndu[2*n] = {1000,1000,1000,1000};
 //    const double bndl[2*n] = {-1000,-1000};
 //    const double bndu[2*n] = {1000,1000};
     double minf=0;
 
-    bopt_params bparams = initialize_parameters_to_default();
+//    bopt_params bparams = initialize_parameters_to_default();
+//    bparams.n_iterations = 150;
+//    bparams.verbose_level = 4;
+//    set_log_file(&bparams, filename.toStdString().c_str());
+//    set_learning(&bparams,"L_MCMC");
+//    int k= bayes_optimization(2*n,f_cubicnCP,NULL,bndl, bndu, cps, &minf, bparams);
+
+    bayesopt::Parameters bparams = initialize_parameters_to_default();
+//    qDebug() << "Initialised params";
     bparams.n_iterations = 150;
     bparams.verbose_level = 4;
-    set_log_file(&bparams, filename.toStdString().c_str());
-    set_learning(&bparams,"L_MCMC");
-    int k= bayes_optimization(2*n,f_cubicnCP,NULL,bndl, bndu, cps, &minf, bparams);
+    bparams.l_type = L_MCMC;
+    bparams.log_filename = filename.toStdString().c_str();
+
+    f_cubicnCP_eval optimizer(bparams);
+    //Define bounds and prepare result.
+    vectord result(2);
+    vectord lowerBounds(2);
+    vectord upperBounds(2);
+    lowerBounds(0) = -1000;lowerBounds(1) = -1000;
+    upperBounds(0) = 1000;upperBounds(1) = 1000;
+    //Set the bounds. This is optional. Default is [0,1]
+    //Only required because we are doing continuous optimization
+    optimizer.setBoundingBox(lowerBounds,upperBounds);
+    //Collect the result in bestPoint
+    optimizer.optimize(result);
+
 //    stream << minf;
     // make the trajectory now
     SplineTrajectory *st;
