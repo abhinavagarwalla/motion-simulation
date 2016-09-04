@@ -195,7 +195,7 @@ double Optimization::f_cubicnCP(unsigned int n1, const double *x, double *gradie
     }
     SplineTrajectory *st = new SplineTrajectory(p, params->vls, params->vrs, params->vle, params->vre);
     double time = st->totalTime();
-    qDebug() << "time:" << time;
+//    qDebug() << "time:" << time;
     if (collides_flag)
         time *= 3;
     return time;
@@ -221,14 +221,14 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
 //    QTextStream stream(&file);
 
 //    double x[4] = {};
-//    const double bndl[2*n] = {-1000,-1000,-1000,-1000};
-//    const double bndu[2*n] = {1000,1000,1000,1000};
-    const double bndl[2*n] = {-1000,-1000};
-    const double bndu[2*n] = {1000,1000};
+    const double bndl[2*n] = {-1000,-1000,-1000,-1000};
+    const double bndu[2*n] = {1000,1000,1000,1000};
+//    const double bndl[2*n] = {-1000,-1000};
+//    const double bndu[2*n] = {1000,1000};
     double minf=0;
 
     bopt_params bparams = initialize_parameters_to_default();
-    bparams.n_iterations = 200;
+    bparams.n_iterations = 150;
     bparams.verbose_level = 4;
     set_log_file(&bparams, filename.toStdString().c_str());
     set_learning(&bparams,"L_MCMC");
