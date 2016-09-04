@@ -65,7 +65,7 @@ SplineTrajectory *cubic(Pose start, Pose end, double vls, double vrs, double vle
 
 //    p->maxk();
     SplineTrajectory *st = new SplineTrajectory(p, vls, vrs, vle, vre);
-
+    qDebug() << "Total time of the trajectory is: " << st->totalTime();
     return st;
 }
 

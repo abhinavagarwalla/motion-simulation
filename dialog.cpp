@@ -672,34 +672,36 @@ void Dialog::on_circleTrajButton_clicked()
 
       // traj = circleGenerator(x,y,r1,startTheta,f);
 //    traj = quinticBezierSplineGenerator(start, end, 0, 0, 40, 70);aj = cubic2CP(start, end, 0, 0, 40, 70);
-
-    //traj = cubic(start, end, 0, 0, 40, 70);
-        for(double sx=-700;sx<=-400;sx+=100){
-            for(double sy=-800;sy<=-400;sy+=100){
-                for(double ex=-400;ex<=400;ex+=100){
-                    for(double ey=-400;ey<=400;ey+=100){
-                            double st=0;double et=0;
-                            std::string filename = "sx_" + std::to_string(int(sx)) + "_sy_" + std::to_string(int(sy)) + "_st_" + std::to_string(int(st)) +
-                                    "_ex_" + std::to_string(int(ex)) + "_ey_" + std::to_string(int(ey)) + "_et_" + std::to_string(int(et));
-                            QString fileid = "/home/abhinav/Desktop/pathplanner_extras/log/" + QString::fromStdString(filename) + ".log";
-                            struct stat buffer;
-                            if(stat (fileid.toStdString().c_str(), &buffer) == 0){continue;}
-                            try{
-                                traj = cubicnCP(Pose(sx,sy,st), Pose(ex,ey,et), 0, 0, 40, 70, 2,filename);
-                            }
-                            catch(std::exception & e){
-                                qDebug() << fileid;
-                                continue;
-                            }
-                            catch(...){
-                                qDebug() << fileid;
-                                continue;
-                            }
-                    }
-                }
-            }
-        }
-//            traj = cubicnCP(start, end, 0, 0, 40, 70, 2,"filename");
+//    qDebug() << "START: " << start.queryX() << " " << start.queryY() << " " << start.queryTheta() << " ";
+//    qDebug() << "\nEND: " << end.queryX() << " " << end.queryY() << " " << end.queryTheta() << " ";
+//    Pose start2(-2255, -1190,0); Pose end2(1715,1270,-0.534183);
+//    traj = cubic(start, end, 0, 0, 40, 70);
+//        for(double sx=-700;sx<=-400;sx+=100){
+//            for(double sy=-800;sy<=-400;sy+=100){
+//                for(double ex=-400;ex<=400;ex+=100){
+//                    for(double ey=-400;ey<=400;ey+=100){
+//                            double st=0;double et=0;
+//                            std::string filename = "sx_" + std::to_string(int(sx)) + "_sy_" + std::to_string(int(sy)) + "_st_" + std::to_string(int(st)) +
+//                                    "_ex_" + std::to_string(int(ex)) + "_ey_" + std::to_string(int(ey)) + "_et_" + std::to_string(int(et));
+//                            QString fileid = "/home/abhinav/Desktop/pathplanner_extras/log/" + QString::fromStdString(filename) + ".log";
+//                            struct stat buffer;
+//                            if(stat (fileid.toStdString().c_str(), &buffer) == 0){continue;}
+//                            try{
+//                                traj = cubicnCP(Pose(sx,sy,st), Pose(ex,ey,et), 0, 0, 40, 70, 2,filename);
+//                            }
+//                            catch(std::exception & e){
+//                                qDebug() << fileid;
+//                                continue;
+//                            }
+//                            catch(...){
+//                                qDebug() << fileid;
+//                                continue;
+//                            }
+//                    }
+//                }
+//            }
+//        }
+            traj = cubicnCP(start, end, 0, 0, 40, 70, 1,"filename_1");
 //    traj = cubic_drawCollisions(start, end, 0, 0, 40, 70);
 
     ui->renderArea->setTrajectory(TrajectoryDrawing::getTrajectoryPath(*traj, 4000, timeLCMs));
