@@ -8,11 +8,15 @@ using namespace std;
 #include <QTextStream>
 #include <QString>
 #include <alglib/optimization.h>
-#include "bayesopt/bayesopt/bayesopt.h"
-#include "bayesopt/bayesopt/parameters.h"
-#include "bayesopt/utils/displaygp.hpp"
+#include "bayesopt/bayesopt.h"
+#include "bayesopt/parameters.h"
+#include "utils/displaygp.hpp"
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <sys/time.h>
+
 using namespace alglib;
 
 extern RenderArea *gRenderArea;
@@ -218,7 +222,7 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
         cps[2*i] = x/fieldXConvert; cps[2*i+1] = y/fieldXConvert;
     }
 
-    QString filename = "/home/abhinav/Desktop/pathplanner_extras/log/" + QString::fromStdString(fileid) + ".log";
+    QString filename = QString::fromStdString(fileid);
 //    QFile file(filename);
 //    file.open(QIODevice::WriteOnly| QIODevice::Text);
 //    QTextStream stream(&file);
@@ -246,7 +250,7 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
 
     f_cubicnCP_eval optimizer(bparams);
     //Define bounds and prepare result.
-    vectord result(2);
+    vectord result(2*n);
     vectord lowerBounds(2);
     vectord upperBounds(2);
     lowerBounds(0) = -1000;lowerBounds(1) = -1000;

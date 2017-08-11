@@ -24,6 +24,11 @@
 #include <functional>
 #include "tests.hpp"
 
+#include <sys/time.h>
+#include <dirent.h>
+#include <string.h>
+#include <stdlib.h>
+
 using namespace std;
 // NOTE(arpit): PREDICTION_PACKET_DELAY is NOT used in simulation. It is used to predict bot position in actual run,
 // as well as the algoController delay
@@ -670,51 +675,90 @@ void Dialog::on_circleTrajButton_clicked()
     if (traj)
         delete traj;
 
-      // traj = circleGenerator(x,y,r1,startTheta,f);
-//    traj = quinticBezierSplineGenerator(start, end, 0, 0, 40, 70);aj = cubic2CP(start, end, 0, 0, 40, 70);
-//    qDebug() << "START: " << start.queryX() << " " << start.queryY() << " " << start.queryTheta() << " ";
-//    qDebug() << "\nEND: " << end.queryX() << " " << end.queryY() << " " << end.queryTheta() << " ";
-//    Pose start2(-2255, -1190,0); Pose end2(1715,1270,-0.534183);
-//    traj = cubic(start, end, 0, 0, 40, 70);
-//        for(double sx=-700;sx<=-400;sx+=100){
-//            for(double sy=-800;sy<=-400;sy+=100){
-//                for(double ex=-400;ex<=400;ex+=100){
-//                    for(double ey=-400;ey<=400;ey+=100){
-//                            double st=0;double et=0;
-//                            std::string filename = "sx_" + std::to_string(int(sx)) + "_sy_" + std::to_string(int(sy)) + "_st_" + std::to_string(int(st)) +
-//                                    "_ex_" + std::to_string(int(ex)) + "_ey_" + std::to_string(int(ey)) + "_et_" + std::to_string(int(et));
-//                            QString fileid = "/home/abhinav/Desktop/pathplanner_extras/log/" + QString::fromStdString(filename) + ".log";
-//                            struct stat buffer;
-//                            if(stat (fileid.toStdString().c_str(), &buffer) == 0){continue;}
-//                            try{
-//                                traj = cubicnCP(Pose(sx,sy,st), Pose(ex,ey,et), 0, 0, 40, 70, 2,filename);
-//                            }
-//                            catch(std::exception & e){
-//                                qDebug() << fileid;
-//                                continue;
-//                            }
-//                            catch(...){
-//                                qDebug() << fileid;
-//                                continue;
-//                            }
-//                    }
-//                }
-//            }
-//        }
-            traj = cubicnCP(start, end, 0, 0, 40, 70, 1,"filename_1");
-//    traj = cubic_drawCollisions(start, end, 0, 0, 40, 70);
+    int iteration = 0;
+    int max_iterations = 3;
+    double thresh_limit = 20.0;
 
-    ui->renderArea->setTrajectory(TrajectoryDrawing::getTrajectoryPath(*traj, 4000, timeLCMs));
-    if (ui->trajSimButton->isEnabled() == false)
+    struct timeval tp;
+    std::string log_base_dir("/home/kv/Desktop/log");
+    DIR *dir;
+    struct dirent *ent;
+
+    while (iteration < max_iterations) {
+      gettimeofday(&tp, NULL);
+      long int ts = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+
+      // Generate the initial co-ordinates
+      double rand_x, rand_y, rand_theta_s, rand_theta_e;
+      srand(ts);
+      rand_x = rand() % 2000 - 1000;
+      rand_y = rand() % 2000 - 1000;
+      rand_theta_s = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+      rand_theta_e = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+      // Read the existing files
+      std::vector<std::string> log_files;
+      if ((dir = opendir(log_base_dir.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+          if (ent->d_name[0] != '.') {
+            log_files.push_back(ent->d_name);
+          }
+        }
+        closedir(dir);
+      } else {
+        qDebug() << "Couldn't open the log directory !";
+      }
+      int log_files_size = log_files.size();
+      if (log_files_size != 0) {
+        for (size_t idx=0; idx < log_files_size; ++idx) {
+          std::string log_file(log_files[idx]);
+          char* file_split;
+          file_split = strtok(const_cast<char*>(log_file.c_str()), "_");
+          file_split = strtok(NULL, "_");
+          double start_x = atof(file_split);
+          file_split = strtok(NULL, "_");
+          double start_y = atof(file_split);
+          qDebug() << " >>>>>>" << start_x << " " << start_y;
+          if (abs(int(rand_x - start_x)) < thresh_limit || \
+              abs(int(rand_y - start_y)) < thresh_limit) {
+            rand_x = rand() % 2000 - 1000;
+            rand_y = rand() % 2000 - 1000;
+          }
+        }
+      }
+      start.setX(rand_x);
+      start.setY(rand_y);
+      start.setTheta(rand_theta_s);
+      end.setTheta(rand_theta_e);
+      std::string filename = "/home/kv/Desktop/log/" +
+                             std::to_string(ts) + "_" + \
+                             std::to_string(start.x()) + "_" + \
+                             std::to_string(start.y()) + "_" + \
+                             std::to_string(start.theta()) + "_" + \
+                             std::to_string(end.theta()) + ".log";
+      qDebug() << "Running Iteration: " << iteration;
+      qDebug() << " Start: [" << start.x() << ", " << start.y() << "]"
+               << " Theta: " << start.theta();
+      qDebug() << " End: [" << end.x() << ", " << end.y() << "]"
+               << " Theta: " << end.theta();
+      traj = cubicnCP(start, end, 0, 0, 40, 70, 1, filename);
+      // traj = cubic_drawCollisions(start, end, 0, 0, 40, 70);
+
+      ui->renderArea->setTrajectory(TrajectoryDrawing::getTrajectoryPath(*traj, 4000, timeLCMs));
+      if (ui->trajSimButton->isEnabled() == false)
         ui->trajSimButton->setEnabled(true);
-    if (!ui->trajCheckbox->isEnabled()) {
+      if (!ui->trajCheckbox->isEnabled()) {
         ui->trajCheckbox->setEnabled(true);
         ui->trajCheckbox->setChecked(true);
-    }
-    ui->renderArea->toggleTrajectory(true);
+      }
+      ui->renderArea->toggleTrajectory(true);
 
-    ui->firaRenderArea->setTrajectory(TrajectoryDrawing::getTrajectoryPath(*traj, 4000, timeLCMs));
-    ui->firaRenderArea->toggleTrajectory(true);
+      ui->firaRenderArea->setTrajectory(TrajectoryDrawing::getTrajectoryPath(*traj, 4000, timeLCMs));
+      ui->firaRenderArea->toggleTrajectory(true);
+      qDebug() << "Completed " << iteration << " iterations";
+      ++iteration;
+    }
+    qDebug() << "Completed all the iterations ";
 }
 
 void Dialog::on_splineChangeBtn_clicked() {
