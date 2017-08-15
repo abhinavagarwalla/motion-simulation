@@ -181,6 +181,7 @@ double Optimization::f_cubicnCP(unsigned int n1, const double *x, double *gradie
     std::vector<Pose> cps;
     for (int i = 0; i < n; i++) {
         cps.push_back(Pose(x[2*i]*fieldXConvert, x[2*i+1]*fieldXConvert, 0));
+        qDebug() << x[2*i]*fieldXConvert << " " <<  x[2*i+1]*fieldXConvert << endl;
     }
     CubicSpline *p = new CubicSpline(params->start, params->end, cps);
 
@@ -201,7 +202,7 @@ double Optimization::f_cubicnCP(unsigned int n1, const double *x, double *gradie
     }
     SplineTrajectory *st = new SplineTrajectory(p, params->vls, params->vrs, params->vle, params->vre);
     double time = st->totalTime();
-//    qDebug() << "time:" << time;
+    qDebug() << "time:" << time;
     if (collides_flag)
         time *= 3;
     return time;
@@ -230,36 +231,36 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
 //    double x[4] = {};
 //    const double bndl[2*n] = {-1000,-1000,-1000,-1000};
 //    const double bndu[2*n] = {1000,1000,1000,1000};
-//    const double bndl[2*n] = {-1000,-1000};
-//    const double bndu[2*n] = {1000,1000};
+    const double bndl[2*n] = {-100,-100};
+    const double bndu[2*n] = {100,100};
     double minf=0;
 
-//    bopt_params bparams = initialize_parameters_to_default();
+    bopt_params bparams = initialize_parameters_to_default();
+    bparams.n_iterations = 40;
+    bparams.verbose_level = 4;
+    set_log_file(&bparams, filename.toStdString().c_str());
+    set_learning(&bparams,"L_MCMC");
+    int k= bayes_optimization(2*n,f_cubicnCP,NULL,bndl, bndu, cps, &minf, bparams);
+
+//    bayesopt::Parameters bparams = initialize_parameters_to_default();
+////    qDebug() << "Initialised params";
 //    bparams.n_iterations = 150;
 //    bparams.verbose_level = 4;
-//    set_log_file(&bparams, filename.toStdString().c_str());
-//    set_learning(&bparams,"L_MCMC");
-//    int k= bayes_optimization(2*n,f_cubicnCP,NULL,bndl, bndu, cps, &minf, bparams);
+//    bparams.l_type = L_MCMC;
+//    bparams.log_filename = filename.toStdString().c_str();
 
-    bayesopt::Parameters bparams = initialize_parameters_to_default();
-//    qDebug() << "Initialised params";
-    bparams.n_iterations = 150;
-    bparams.verbose_level = 4;
-    bparams.l_type = L_MCMC;
-    bparams.log_filename = filename.toStdString().c_str();
-
-    f_cubicnCP_eval optimizer(bparams);
-    //Define bounds and prepare result.
-    vectord result(2*n);
-    vectord lowerBounds(2);
-    vectord upperBounds(2);
-    lowerBounds(0) = -1000;lowerBounds(1) = -1000;
-    upperBounds(0) = 1000;upperBounds(1) = 1000;
-    //Set the bounds. This is optional. Default is [0,1]
-    //Only required because we are doing continuous optimization
-    optimizer.setBoundingBox(lowerBounds,upperBounds);
-    //Collect the result in bestPoint
-    optimizer.optimize(result);
+//    f_cubicnCP_eval optimizer(bparams);
+//    //Define bounds and prepare result.
+//    vectord result(2*n);
+//    vectord lowerBounds(2);
+//    vectord upperBounds(2);
+//    lowerBounds(0) = -1000;lowerBounds(1) = -1000;
+//    upperBounds(0) = 1000;upperBounds(1) = 1000;
+//    //Set the bounds. This is optional. Default is [0,1]
+//    //Only required because we are doing continuous optimization
+//    optimizer.setBoundingBox(lowerBounds,upperBounds);
+//    //Collect the result in bestPoint
+//    optimizer.optimize(result);
 
 //    stream << minf;
     // make the trajectory now
@@ -267,7 +268,7 @@ Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, doubl
     {
         vector<Pose> cpsf;
         for (int i = 0; i < n; i++) {
-            cpsf.push_back(Pose(cps[2*i], cps[2*i+1], 0));
+            cpsf.push_back(Pose(cps[2*i]*fieldXConvert, cps[2*i+1]*fieldXConvert, 0));
         }
         static vector<PointDrawable*> pts;
         for (int i = 0; i < pts.size(); i++) {

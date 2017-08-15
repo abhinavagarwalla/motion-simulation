@@ -20,7 +20,7 @@ PROTOFILES_H = proto/cpp/messages_robocup_ssl_detection.pb.h proto/cpp/messages_
 NETFILES_H = net/netraw.h net/robocup_ssl_client.h
 NETFILES_CPP = net/netraw.cpp net/robocup_ssl_client.cpp
 
-INCLUDEPATH += net/ proto/cpp/ bayesopt/include/ bayesopt/matplotpp/
+INCLUDEPATH += net/ proto/cpp/ bayesopt/include/ bayesopt/matplotpp/ bayesopt/
 
 SOURCES += main.cpp\
         dialog.cpp \

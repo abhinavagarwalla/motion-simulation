@@ -676,7 +676,7 @@ void Dialog::on_circleTrajButton_clicked()
         delete traj;
 
     int iteration = 0;
-    int max_iterations = 3;
+    int max_iterations = 1;
     double thresh_limit = 20.0;
 
     struct timeval tp;
@@ -726,10 +726,10 @@ void Dialog::on_circleTrajButton_clicked()
           }
         }
       }
-      start.setX(rand_x);
-      start.setY(rand_y);
-      start.setTheta(rand_theta_s);
-      end.setTheta(rand_theta_e);
+//      start.setX(rand_x);
+//      start.setY(rand_y);
+//      start.setTheta(rand_theta_s);
+//      end.setTheta(rand_theta_e);
       std::string filename = "/home/kv/Desktop/log/" +
                              std::to_string(ts) + "_" + \
                              std::to_string(start.x()) + "_" + \

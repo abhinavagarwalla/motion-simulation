@@ -4,9 +4,9 @@
 #include "splines.hpp"
 #include "pose.h"
 #include <alglib/optimization.h>
-#include "bayesopt/bayesopt/bayesopt.h"
-#include "bayesopt/bayesopt/parameters.h"
-#include "bayesopt/utils/displaygp.hpp"
+#include "bayesopt/bayesopt.h"
+#include "bayesopt/parameters.h"
+#include "utils/displaygp.hpp"
 
 using namespace alglib;
 namespace Optimization {
