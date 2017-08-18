@@ -24,11 +24,15 @@ struct OptParams {
 double f_cubicnCP(const gsl_vector* x, void * params);
 double f_cubicnCP(unsigned int n, const double *x, double *gradient, void *func_data);
 Trajectory *cubicSplinenCPOptimization(Pose start, Pose end, double vls, double vrs, double vle, double vre, int n, std::string fileid);
+
+// Single step optimization
+Trajectory* SingleStepOptimization(Pose start, Pose end, double vls, double vrs, double vle, double vre, int n, std::string fileid);
+
 //OptParams *gparams;
 class f_cubicnCP_eval: public bayesopt::ContinuousModel{
 public:
     f_cubicnCP_eval(bayesopt::Parameters param):
-       ContinuousModel(2,param)
+       ContinuousModel(2, param)
      {qDebug() << "Class is constructed ";}
      double evaluateSample( const vectord& query )
      {

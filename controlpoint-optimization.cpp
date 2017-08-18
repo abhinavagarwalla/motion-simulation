@@ -11,6 +11,8 @@ using namespace std;
 #include "bayesopt/bayesopt.h"
 #include "bayesopt/parameters.h"
 #include "utils/displaygp.hpp"
+#include "utils/testfunctions.hpp"
+#include "bopt_state.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -206,6 +208,91 @@ double Optimization::f_cubicnCP(unsigned int n1, const double *x, double *gradie
     if (collides_flag)
         time *= 3;
     return time;
+}
+
+Trajectory* Optimization::SingleStepOptimization(Pose start, Pose end, double vls, double vrs, double vle, double vre, int n, std::string fileid) {
+
+    OptParams params(start, end, vls, vrs, vle, vre, n);
+    gparams = &params;
+
+    int max_runs = 150;
+    QString filename = QString::fromStdString(fileid);
+
+    bayesopt::Parameters bparams = initialize_parameters_to_default();
+    bparams.n_iterations = 150;
+    bparams.verbose_level = 4;
+    bparams.l_type = L_MCMC;
+    bparams.log_filename = filename.toStdString().c_str();
+
+    f_cubicnCP_eval *opt(new f_cubicnCP_eval(bparams));
+    vectord lowerBounds(2);
+    vectord upperBounds(2);
+    lowerBounds(0) = -1000;lowerBounds(1) = -1000;
+    upperBounds(0) = 1000;upperBounds(1) = 1000;
+    opt->setBoundingBox(lowerBounds,upperBounds);
+
+    opt->initializeOptimization();
+    for (size_t run = 0; run < max_runs; ++run) {
+        qDebug() << "Step Optimization #" << run << "\n";
+        opt->stepOptimization();
+    }
+
+//    opt.optimize(result);
+    qDebug() << "Completed all the iterations\n";
+    // Get the final result
+    vectord final_result = opt->getFinalResult();
+    qDebug() << "Start: " << start.x() << " " << start.y() << "\n";
+    qDebug() << "End: " << end.x() << " " << end.y() << "\n";
+    qDebug() << "Result: " << final_result[0]*fieldXConvert << " " << final_result[1] * fieldXConvert << "\n";
+
+    bayesopt::BOptState state;
+    bayesopt::Parameters uparams;
+//    opt->saveOptimization(state);
+//    state.saveToFile("/home/kv/Desktop/state.log");
+//    qDebug() << "Saved the state !\n";
+
+    qDebug() << "Loading the saved state...\n";
+    state.loadFromFile("/home/kv/Desktop/state.log", uparams);
+    qDebug() << ">> " << uparams
+    qDebug() << "Done!\n";
+    delete opt;
+
+    // Running from the saved parameters
+    opt = new f_cubicnCP_eval(uparams);
+    opt->setBoundingBox(lowerBounds,upperBounds);
+
+    qDebug() << "Running from the saved paramters\n";
+    opt->initializeOptimization();
+    for (size_t run = 0; run < max_runs; ++run) {
+        qDebug() << "Step Optimization #" << run << "\n";
+        opt->stepOptimization();
+    }
+    vectord final_result = opt->getFinalResult();
+    qDebug() << "Result: " << final_result[0]*fieldXConvert << " " << final_result[1] * fieldXConvert << "\n";
+
+
+    // Generate the trajectory
+    SplineTrajectory *st;
+    {
+        vector<Pose> cpsf;
+        for (int i = 0; i < n; i++) {
+            cpsf.push_back(Pose(final_result[2*i]*fieldXConvert, final_result[2*i+1]*fieldXConvert, 0));
+        }
+        static vector<PointDrawable*> pts;
+        for (int i = 0; i < pts.size(); i++) {
+            if (pts[i])
+                delete pts[i];
+        }
+        pts.clear();
+        for (int i = 0; i < n; i++) {
+            PointDrawable *pt = new PointDrawable(QPointF(cpsf[i].x(), cpsf[i].y()), gRenderArea);
+            pts.push_back(pt);
+        }
+        CubicSpline *p = new CubicSpline(start, end, cpsf);
+        st = new SplineTrajectory(p, vls, vrs, vle, vre);
+    }
+
+    return st;
 }
 
 Trajectory *Optimization::cubicSplinenCPOptimization(Pose start, Pose end, double vls, double vrs, double vle, double vre, int n, std::string fileid)

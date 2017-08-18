@@ -723,6 +723,7 @@ void Dialog::on_circleTrajButton_clicked()
               abs(int(rand_y - start_y)) < thresh_limit) {
             rand_x = rand() % 2000 - 1000;
             rand_y = rand() % 2000 - 1000;
+            idx = 0;
           }
         }
       }
@@ -741,7 +742,11 @@ void Dialog::on_circleTrajButton_clicked()
                << " Theta: " << start.theta();
       qDebug() << " End: [" << end.x() << ", " << end.y() << "]"
                << " Theta: " << end.theta();
-      traj = cubicnCP(start, end, 0, 0, 40, 70, 1, filename);
+//       traj = cubicnCP(start, end, 0, 0, 40, 70, 1, filename);
+
+      // Single Step Optimization
+      traj = Optimization::SingleStepOptimization(start, end, 0, 0, 40, 70, 1, filename);
+
       // traj = cubic_drawCollisions(start, end, 0, 0, 40, 70);
 
       ui->renderArea->setTrajectory(TrajectoryDrawing::getTrajectoryPath(*traj, 4000, timeLCMs));
