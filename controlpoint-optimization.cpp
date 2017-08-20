@@ -10,13 +10,16 @@ using namespace std;
 #include <alglib/optimization.h>
 #include "bayesopt/bayesopt.h"
 #include "bayesopt/parameters.h"
+#include "dataset.hpp"
 #include "utils/displaygp.hpp"
 #include "utils/testfunctions.hpp"
 #include "bopt_state.hpp"
+#include "prob_distribution.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 #include <sys/time.h>
 
 using namespace alglib;
@@ -183,7 +186,7 @@ double Optimization::f_cubicnCP(unsigned int n1, const double *x, double *gradie
     std::vector<Pose> cps;
     for (int i = 0; i < n; i++) {
         cps.push_back(Pose(x[2*i]*fieldXConvert, x[2*i+1]*fieldXConvert, 0));
-        qDebug() << x[2*i]*fieldXConvert << " " <<  x[2*i+1]*fieldXConvert << endl;
+//        qDebug() << x[2*i]*fieldXConvert << " " <<  x[2*i+1]*fieldXConvert << endl;
     }
     CubicSpline *p = new CubicSpline(params->start, params->end, cps);
 
@@ -204,9 +207,9 @@ double Optimization::f_cubicnCP(unsigned int n1, const double *x, double *gradie
     }
     SplineTrajectory *st = new SplineTrajectory(p, params->vls, params->vrs, params->vle, params->vre);
     double time = st->totalTime();
-    qDebug() << "time:" << time;
-    if (collides_flag)
-        time *= 3;
+//    qDebug() << "time:" << time;
+//    if (collides_flag)
+//        time *= 3;
     return time;
 }
 
@@ -227,49 +230,104 @@ Trajectory* Optimization::SingleStepOptimization(Pose start, Pose end, double vl
     f_cubicnCP_eval *opt(new f_cubicnCP_eval(bparams));
     vectord lowerBounds(2);
     vectord upperBounds(2);
-    lowerBounds(0) = -1000;lowerBounds(1) = -1000;
-    upperBounds(0) = 1000;upperBounds(1) = 1000;
+    lowerBounds(0) = -2000/fieldXConvert; lowerBounds(1) = -2000/fieldXConvert;
+    upperBounds(0) = 2000/fieldXConvert; upperBounds(1) = 2000/fieldXConvert;
     opt->setBoundingBox(lowerBounds,upperBounds);
 
+    std::string points_logger("/home/kv/Desktop/std_new_run_8.log");
+    std::fstream f, f2;
     opt->initializeOptimization();
     for (size_t run = 0; run < max_runs; ++run) {
-        qDebug() << "Step Optimization #" << run << "\n";
         opt->stepOptimization();
+//        const double res = opt->getData()->getValueAtMinimum();
+//        f.open(points_logger, std::ofstream::app);
+//        f << res << "\n";
+//        f.close();
     }
 
-//    opt.optimize(result);
-    qDebug() << "Completed all the iterations\n";
-    // Get the final result
-    vectord final_result = opt->getFinalResult();
     qDebug() << "Start: " << start.x() << " " << start.y() << "\n";
     qDebug() << "End: " << end.x() << " " << end.y() << "\n";
-    qDebug() << "Result: " << final_result[0]*fieldXConvert << " " << final_result[1] * fieldXConvert << "\n";
+//    qDebug() << "Result: " << final_result[0]*fieldXConvert << " " << final_result[1] * fieldXConvert << "\n";
 
     bayesopt::BOptState state;
     bayesopt::Parameters uparams;
-//    opt->saveOptimization(state);
-//    state.saveToFile("/home/kv/Desktop/state.log");
-//    qDebug() << "Saved the state !\n";
+    opt->saveOptimization(state);
+    state.saveToFile("/home/kv/Desktop/state3.log");
+    qDebug() << "Saved the state !\n";
 
     qDebug() << "Loading the saved state...\n";
-    state.loadFromFile("/home/kv/Desktop/state.log", uparams);
-    qDebug() << ">> " << uparams
+    state.loadFromFile("/home/kv/Desktop/state3.log", uparams);
     qDebug() << "Done!\n";
-    delete opt;
 
     // Running from the saved parameters
-    opt = new f_cubicnCP_eval(uparams);
-    opt->setBoundingBox(lowerBounds,upperBounds);
+//    opt = new f_cubicnCP_eval(uparams);
+//    opt->setBoundingBox(lowerBounds,upperBounds);
 
-    qDebug() << "Running from the saved paramters\n";
-    opt->initializeOptimization();
+//    qDebug() << "Running from the saved paramters\n";
+//    std::chrono::steady_clock::time_point t1, t2;
+//    opt->initializeOptimization();
     for (size_t run = 0; run < max_runs; ++run) {
-        qDebug() << "Step Optimization #" << run << "\n";
-        opt->stepOptimization();
+//        qDebug() << "Step Optimization #" << run << "\n";
+//        t1 = std::chrono::steady_clock::now();
+//        opt->stepOptimization();
+//        t2 = std::chrono::steady_clock::now();
+//        const double res = opt->getData()->getValueAtMinimum();
     }
-    vectord final_result = opt->getFinalResult();
-    qDebug() << "Result: " << final_result[0]*fieldXConvert << " " << final_result[1] * fieldXConvert << "\n";
 
+//        f.open(points_logger, std::ofstream::app);
+//        f << res << " ";
+//        f << std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count() << "\n";
+//    vectord final_result = opt->getFinalResult();
+//    qDebug() << "Result: " << final_result[0]*fieldXConvert << " " << final_result[1] * fieldXConvert << "\n";
+
+
+    // Scale the actual final result
+    vectord final_result = opt->getFinalResult();
+
+    // Generate the 2d grid
+    std::vector<double> x, y;
+    if (start.x() < end.x()) {
+       x = linspace(start.x()/fieldXConvert, end.x()/fieldXConvert, 50);
+    } else {
+        x = linspace(end.x()/fieldXConvert, start.x()/fieldXConvert, 50);
+    }
+    if (start.y() < end.y()) {
+        y = linspace(start.y()/fieldXConvert, end.y()/fieldXConvert, 50);
+    } else {
+        y = linspace(end.y()/fieldXConvert, start.y()/fieldXConvert, 50);
+    }
+
+    vectord query(2);
+    for (size_t i = 0; i < 50; ++i) {
+        for (size_t j = 0; j < 50; ++j) {
+            query[0] = x[i];
+            query[1] = y[j];
+
+            bayesopt::ProbabilityDistribution* pd = opt->getPrediction(query);
+            double criterion = -opt->evaluateCriteria(query);
+            double sample_evlt = opt->evaluateSample(query);
+            double _mean = pd->getMean();
+            double stddev = pd->getStd();
+
+            qDebug() << ">>" << query[0] << " "<< query[1] << "\n";
+            qDebug() << "mean is " << _mean << " " << "E: " << sample_evlt << endl;
+            f2.open(points_logger, std::fstream::app);
+            f2 << query[0] << " " << query[1] << " " << _mean << " "<< stddev << " " << criterion << " " << sample_evlt << "\n";
+            f2.close();
+        }
+    }
+
+    query[0] = final_result[0] * fieldXConvert;
+    query[1] = final_result[1] * fieldXConvert;
+    bayesopt::ProbabilityDistribution* pd = opt->getPrediction(query);
+    double criterion = -opt->evaluateCriteria(query);
+    double sample_evlt = opt->evaluateSample(query);
+    f2.open(points_logger, std::fstream::app);
+    double _mean = pd->getMean();
+    double stddev = pd->getStd();
+    f2 << "-------------------------------------------\n";
+    f2 << query[0] << " " << query[1] << " " << _mean << " "<< stddev << " " << criterion << " " << sample_evlt << "\n";
+    f2.close();
 
     // Generate the trajectory
     SplineTrajectory *st;

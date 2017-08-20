@@ -745,7 +745,7 @@ void Dialog::on_circleTrajButton_clicked()
 //       traj = cubicnCP(start, end, 0, 0, 40, 70, 1, filename);
 
       // Single Step Optimization
-      traj = Optimization::SingleStepOptimization(start, end, 0, 0, 40, 70, 1, filename);
+      traj = Optimization::SingleStepOptimization(start, end, 0, 0, 0, 0, 1, filename);
 
       // traj = cubic_drawCollisions(start, end, 0, 0, 40, 70);
 
